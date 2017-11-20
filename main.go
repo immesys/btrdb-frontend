@@ -7,6 +7,7 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -121,6 +122,18 @@ func ProxyGRPC(laddr string) GRPCInterface {
 
 func main() {
 	ProxyGRPC("0.0.0.0:4410")
+
+	etcdEndpoint := os.Getenv("ETCD_ENDPOINT")
+	if len(etcdEndpoint) == 0 {
+		etcdEndpoint = "http://etcd:2379"
+	}
+	etcdClient, err = etcd.New(etcd.Config{
+		Endpoints:   []string{etcdEndpoint},
+		DialTimeout: 5 * time.Second})
+	if err != nil {
+		fmt.Printf("Could not connect to etcd: %v\n", err)
+		os.Exit(1)
+	}
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
